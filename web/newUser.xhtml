@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <head>
+        <title>TODO supply a title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </head>
+    <h:body>
+        <h:form >
+            <h:panelGrid id="loginPanal">
+                <h:panelGrid columns="3" rendered="#{'user infromtion' ne userBean.loginOrUser}" >
+                    <p:button outcome="index" value="back home"  />
+                    <h:outputText id="textResult"  escape="false" value="#{userBean.massege}" style="color:red"/>
+                    <h:outputText value=""/>
+
+                    User-ID:
+                    <h:inputText id="userInputText" maxlength="40" required="true" requiredMessage="Please enter a user name" value="#{userBean.userID}" validatorMessage="it must be less then 40 charcters"/>
+                    <h:message id="userMessage" for="userInputText" styleClass="error"/>
+
+                    Name:
+                    <h:inputText id="nameInputText" maxlength="30" required="true" requiredMessage="Please enter your name" value="#{userBean.name}" validatorMessage="Name must be fewer than 30 characters">
+                    </h:inputText>
+                    <h:message id="nameMessage" for="nameInputText" styleClass="error"/>
+
+                    E-mail:
+                    <h:inputText id="emailInputText" value="#{userBean.email}" validatorMessage="Invalid e-mail address format">
+                        <f:validateRegex pattern="(\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)||()"/>
+                    </h:inputText>
+                    <h:message id="emailMessage" for="emailInputText" styleClass="error"/>
+
+                    Phone:
+                    <h:inputText id="phoneInputText" value="#{userBean.phone}" validatorMessage="Invalid phone number format">
+                        <f:validateRegex pattern="(((\(\d{3}\) ?)|(\d{3}-))?\d{3}-\d{4})||()"/>
+                    </h:inputText>
+                    <h:message id="phoneMessage" for="phoneInputText" styleClass="error"/>
+
+                    Password:
+                    <p:password id="pwd1" requiredMessage="Please enter a password" value="#{userBean.password}" validatorMessage="passwords must be the same" match="pwd2" label="Password 1" required="true" />
+                    <h:message id="passwordMessage" for="pwd1" styleClass="error"/>
+
+                    Password confirmation:
+                    <p:password id="pwd2" value="#{userBean.password}" label="Password 2" required="true" requiredMessage="Please enter a password"/>
+                    <h:message id="passwoMessage" for="pwd2" styleClass="error"/>
+
+                    City:
+                    <h:selectOneMenu value="#{userBean.city}" id="cityInputText" >
+                        <f:selectItem itemLabel=""/>
+                        <f:selectItems value="#{searchBean.completeCity()}"/>
+                    </h:selectOneMenu>
+                    <h:message id="cityMessage" for="cityInputText" styleClass="error"/>
+
+                    Address:
+                    <h:inputText id="addressInputText" value="#{userBean.name}" validatorMessage="Name must be fewer than 30 characters" >
+                        <f:validateLength maximum="30"/>
+                    </h:inputText>
+                    <h:message id="addressMessage" for="addressInputText" styleClass="error"/>
+                    <h:commandButton type="reset" value="clear"/>
+
+                    <h:commandButton value="Submit"  action="#{userBean.insertUser()}"  >
+                       <f:ajax execute="userInputText nameInputText emailInputText phoneInputText pwd1 pwd2" 
+                               render="loginPanal"/>
+                    </h:commandButton>
+                </h:panelGrid>
+
+
+
+                <h:panelGrid id="userPart" rendered="#{'user infromtion' eq userBean.loginOrUser}">
+                    <p:commandButton value="managemnt" action="#{userBean.goManager()}" update="@all"/>
+                    <p:commandButton value="edit infromtion" update="loginPanal" action="#{userBean.editPage()}"/>
+                    <p:commandButton value="log out" icon="ui-icon-extlink" action="#{userBean.logOut()}" update="@all"/>
+
+                    <h:dataTable id="tableinfo" value="#{userBean.tickits}" cellspacing="0" var="tickit" rowClasses="oddRows,evenRows" headerClass="header" style="table" cellpadding="5">
+                        <h:column>
+                            <f:facet name="header">number</f:facet>
+                            #{tickit.ticket_no};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">name</f:facet>
+                            #{tickit.show_name};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">theater</f:facet>
+                            #{tickit.theater_name};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">date</f:facet>
+                            #{tickit.event_date};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">time</f:facet>
+                            #{tickit.event_time};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">row</f:facet>
+                            #{tickit.row};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">seat</f:facet>
+                            #{tickit.seat};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">price</f:facet>
+                            #{tickit.price};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">cancel</f:facet>
+                            <p:commandButton value="cancel tickt" actionListener="#{userBean.cancelTicket(userBean.tickits.row)}" update="loginPanal" >
+                                <p:confirm  message="are you sure you want to cancel the ticket?"/>
+                            </p:commandButton>
+                        </h:column>
+                    </h:dataTable>
+                </h:panelGrid>    
+            </h:panelGrid>
+            
+            
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="yes" type="button" styleClass="ui-confirmdialog-yes"/>
+                <p:commandButton value="no" type="button" styleClass="ui-confirmdialog-no"/>
+            </p:confirmDialog>
+                
+            
+            
+        </h:form>
+    </h:body>
+</html>
