@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <h:head>
+        <title>TODO supply a title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form enctype="multipart/form-data" id="search">
+            
+            <h:panelGrid id="search1">
+                <h:outputText value="#{search.ASearchOrResult}"/>
+                <h:panelGrid columns="3" rendered="#{'search' eq search.ASearchOrResult}">
+                    <h:outputText value="  "/>
+                    <h:outputText value="#{search.message}" style="color: red"/>
+                    <h:message id="yearMessage" for="yearInputText" styleClass="error" style="color: red"/>
+
+                    Name:
+                    <p:autoComplete id="nameInputText"  value="#{search.showNames}" completeMethod="#{search.completeText}"  />
+                     <h:outputLabel value="(optinal)" />
+
+                     Category:
+                     <h:selectOneMenu value="#{search.categoryName}" id="categoryInputText"  >
+                         <f:selectItem itemLabel=""/>
+                         <f:selectItems value="#{search.completeCategory()}"/>
+                     </h:selectOneMenu>
+                     <h:outputLabel value="(optinal)" />
+
+                     Year produced:
+                     <p:inputText id="yearInputText" required="false"  value="#{search.yearProduced}" validatorMessage="Please enter a valid year (4 numbers)">
+                         <f:validateRegex pattern="([0-9][0-9][0-9][0-9])|()"/>
+                     </p:inputText>
+                     <h:outputLabel value="(optinal)" />
+
+                     City show:
+                     <h:selectOneMenu value="#{search.cityName}" id="cityInputText" >
+                         <f:selectItem itemLabel=""/>
+                         <f:selectItems value="#{search.completeCity()}"/>
+                     </h:selectOneMenu>
+                     <h:outputLabel value="(optinal)" />
+
+                     Date show:
+                     <p:calendar id="dateInputText" value="#{search.dateShow}" mindate="today" />
+                     <h:outputLabel value="(optinal)" />
+
+                     <h:commandButton value="reset"/>
+                     <h:commandButton value="Submit" action="#{search.showSearch()}">
+                         <f:ajax execute="categoryInputText nameInputText cityInputText yearInputText dateInputText" render="search"/> 
+                     </h:commandButton>
+                 </h:panelGrid>
+            </h:panelGrid>
+                
+            <h:panelGrid  id="result1" rendered="#{'shows' eq search.ASearchOrResult}">
+                <p:commandButton value="add show" onclick="PF('eventDialog').show();" rendered="#{userBean.manager}"/>
+                <p:dataTable  var="aShow" value="#{search.showList}" paginator="true" rows="5" emptyMessage="No events found with given criteria"
+                    paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+                    rowsPerPageTemplate="2,5,15" rowKey="#{show.showCode}" selectionMode="single" selection="#{search.slectedRowShow}" widgetVar="showsPTable" id="showTable">
+                    <f:ajax event="rowSelect" render=":mainform:search"/>
+                    
+       
+                    <p:column headerText="Show" filterBy="#{aShow.name}" >
+                        <h:outputText value="#{aShow.name}"/>
+                    </p:column>
+                    <p:column headerText="Category" filterBy="#{aShow.category}" filterMatchMode="exact">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('showsPTable').filter()" >
+                                <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{search.completeCategory()}" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{aShow.category}"/>
+                    </p:column>
+                    <p:column headerText="Description" filterBy="#{aShow.description}">
+                        <h:outputText value="#{aShow.description}"/>
+                    </p:column>
+                    <p:column headerText="Year pruduce" filterBy="#{aShow.year}">
+                        <h:outputText value="#{aShow.year}"/>
+                    </p:column>
+                    <p:column headerText="Length" filterBy="#{aShow.length}">
+                        <h:outputText value="#{aShow.length}"/>
+                    </p:column>
+                    <p:column style="width:40px" rendered="#{userBean.manager}">
+                        <h:commandLink value="Delete" onclick="if(! #{search.deleteShow(aShow)}){return false;}" >
+                            <f:ajax render=":mainform:search:result1"/>
+                        </h:commandLink>
+                    </p:column>
+                    <p:column style="width:32px" rendered="#{userBean.manager}">
+                        <h:commandLink value="Edit" action="#{show.editShow(aShow)}" >
+                            <f:ajax render=":mainform:search"/>
+                        </h:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </h:panelGrid>
+            
+            
+            <h:panelGrid id="result2" rendered="#{'events' eq search.ASearchOrResult}">
+                <p:commandButton value="add show" onclick="PF('eventDialog').show();" rendered="#{userBean.manager}"/>
+                <h1>#{show.name}</h1>
+                <h3>category: #{show.category} year produce: #{show.year} durtion time: #{show.length}</h3>
+                <h6>#{show.description}</h6>
+                <p:graphicImage value="/aass/1000.jpg" alt="Image Description for " title="/aass/1000.jpg" />
+                <p:carousel value="#{show.picsRs}" var="pic" style="width:100%;height: 205px" headerText="show picturs" autoPlayInterval="1500" circular="true">
+                   <h:panelGrid columns="1"  cellpadding="5">
+                     <p:graphicImage value="#{pic}" style="width:200px;height: 150px"/>
+                   </h:panelGrid>
+                </p:carousel>
+                <p:scrollPanel style="width:100%;height:200px" rendered="#{not empty show.reviewRs}">
+                    <h:dataTable value="#{show.reviewRs}" var="reviwe">
+                        <p:accordionPanel dynamic="true" cache="true">
+                            <p:tab title="#{reviwe.user_id}">
+                                <h:panelGrid cellpadding="10">
+                                    <h:outputText value="#{reviwe.reviwe}" />
+                                </h:panelGrid>
+                            </p:tab>
+                        </p:accordionPanel>
+                    </h:dataTable>
+                </p:scrollPanel>
+                <h:inputTextarea />
+                <p:dataTable  var="event" value="#{search.eventList}" paginator="true" rows="5" emptyMessage="No events found with given criteria"
+                    paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+                    rowsPerPageTemplate="2,5,15" rowKey="#{event.code}" selectionMode="single" selection="#{search.slectedRowEvent}" widgetVar="eventPTable" id="eventTable" >
+                    <f:ajax event="rowSelect" render=":mainform:search"/>
+
+                    <p:column headerText="Date" filterBy="#{event.date}">
+                        <h:outputText value="#{event.date}" />
+                    </p:column>
+                    <p:column headerText="Time" filterBy="#{event.time}">
+                        <h:outputText value="#{event.time}" />
+                    </p:column>
+                    <p:column headerText="City" filterMatchMode="exact" filterBy="#{event.city}">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('eventPTable').filter()" >
+                                <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{search.completeCity()}" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{event.city}" />
+                    </p:column>
+                    <p:column headerText="Theater" filterMatchMode="exact" filterBy="#{event.theater}">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('eventPTable').filter()" >
+                                <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
+                                <f:selectItems value="#{search.completeTheater()}" />
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText value="#{event.theater}" />
+                    </p:column>
+                    <p:column headerText="Time" filterBy="#{event.time}">
+                        <h:outputText value="#{event.time}" />
+                    </p:column>
+                    <p:column headerText="Empty seats" filterBy="#{event.emptySeats}">
+                        <h:outputText value="#{event.emptySeats}"/>
+                    </p:column>
+                    <p:column style="width:40px" rendered="#{userBean.manager}">
+                        <h:commandLink value="Delete" onclick="if(! #{search.deleteEvent(event)}){return false;}">
+                            <f:ajax render=":mainform:search:result2"/>
+                        </h:commandLink>
+                    </p:column>
+                    <p:column style="width:32px" rendered="#{userBean.manager}">
+                        <h:commandLink value="Edit" action="#{eventBean.editEvent(event)}" >
+                            <f:ajax render=":mainform:search"/>
+                        </h:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </h:panelGrid>
+            
+            
+            
+            <p:dialog header="Choose seat" widgetVar="seatDialog" modal="true" showEffect="fade" hideEffect="fade" resizable="true">
+                <p:outputPanel id="seatDetail" style="text-align:center;">
+                    <p:panelGrid columns="2" rendered="#{not empty search.slectedRowEvent}" columnClasses="label,value">
+                        <c:choose>
+                            <c:when test="#{'log in' eq userBean.loginOrUser}">
+                                <p:panelGrid columns="2" columnClasses="value">
+                                    <ui:include src="\login.xhtml"/>
+                                </p:panelGrid>
+                            </c:when>
+                            
+                            
+                            <c:otherwise>
+                                <p:dataGrid id="availableSeats" var="seat" value="#{search.seats}" columns="3">
+                                    <p:panel id="pnl" header="row #{seat.row} seat #{seat.seat}" style="text-align: center">
+                                        <h:panelGrid columns="1" style="width:100%">
+                                            <c:choose>
+                                                <c:when test="#{seat.assigned}">
+                                                    <p:commandButton value="#{seat.price}" style="color: red" />
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <p:commandButton value="#{seat.price}" style="color: yellowgreen" onclick="if(#{search.bookTicket(seat)}) {PF('seatDialog').update();}" update="@this"/>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </h:panelGrid>
+                                    </p:panel>
+                                    <p:draggable for="pnl" revert="true" handle=".ui-panel-titlebar" stack=".ui-panel"/>
+                                </p:dataGrid>
+                            </c:otherwise>
+                        </c:choose>  
+                    </p:panelGrid>
+                </p:outputPanel>
+            </p:dialog>
+        </h:form>
+        
+        
+        
+        <h:form>
+            <p:dialog header="Add a event" widgetVar="eventDialog" modal="true" showEffect="fade" hideEffect="fade" resizable="false">
+                <p:outputPanel id="eventDetail" style="text-align:center;">
+                    <p:panelGrid rendered="#{search.slectedRowShow == null}" columns="2" columnClasses="value">
+                        <ui:include src="\showFill.xhtml"/>
+                    </p:panelGrid>
+
+                    <p:panelGrid rendered="#{search.slectedRowShow != null}" columns="2" columnClasses="value" >
+                        <ui:include src="\eventFill.xhtml"/>
+                    </p:panelGrid>
+                </p:outputPanel>
+            </p:dialog>
+        </h:form>
+    </h:body>
+</html>
