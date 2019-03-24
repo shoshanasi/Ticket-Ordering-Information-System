@@ -1,10 +1,16 @@
-
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package newuserbean;
 
 
 import eventsinformation.*;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
@@ -25,6 +31,7 @@ public class UserBean  implements Serializable {
     private String email;
     private String phone;
     private String password;
+    private String password2;
     private String address;
     private String city;
     
@@ -37,11 +44,15 @@ public class UserBean  implements Serializable {
     
     
    
-    public UserBean() throws SQLException {
-        this.manager = true;
+    public UserBean() {
+        this.manager = false;
         this.activTab = "home";
         this.loginOrUser = "log in";
-        dbInfo = new EventsInfoImpl(UserBean.USER, UserBean.PASS);
+        try {
+            dbInfo = new EventsInfoImpl(UserBean.USER, UserBean.PASS);
+        } catch (SQLException ex) {
+            this.setMassege("we had problems connecting the database please try again later");
+        }
     }
     
     
@@ -77,13 +88,7 @@ public class UserBean  implements Serializable {
             FacesContext.getCurrentInstance().getViewRoot().getViewMap().remove("search");
         }*/
         if(this.activTab.equals("login")&&this.userID != null){
-            try {
-                rs = dbInfo.getUserTickets();
-            } catch (SQLException ex) {
-                this.setMassege("we had problems connecting the database please try again later");
-            } catch (NoAccessException ex) {
-                this.setMassege(ex.getMessage());
-            }
+            this.setTickits();
         }
         System.out.println("asas");
     }
@@ -96,15 +101,8 @@ public class UserBean  implements Serializable {
         return manager;
     }
     
-    public String goManager(){
-        if(manager){
-            activTab = "shows";
-            return "manager";
-        }
-        else{
-            this.setMassege("you arent a manager");
-            return "";
-        }     
+    public String goManaget(){
+        return "manager";  
     }
     
     public void fastSearch(){
@@ -119,6 +117,7 @@ public class UserBean  implements Serializable {
                     dbInfo = new EventsManagerInfoImpl(dbInfo);
                     this.manager = true;
                 }
+                this.setTickits();
                 return true;
             }
             else{
@@ -135,11 +134,16 @@ public class UserBean  implements Serializable {
    }
    
    
+   
    public String insertUser() {
         try {
             if(this.loginOrUser.equals("edit")||dbInfo.validUserName(userID)) {
             } else{
                 message = "this user exits already";
+                return "";
+            }
+            if(!password.equals(password2)){
+                message = "passwords dont match";
                 return "";
             }
             if(dbInfo.insertUser(this)){
@@ -161,6 +165,10 @@ public class UserBean  implements Serializable {
    }
    
    public FilteredRowSet getTickits() {
+       return rs;
+   }
+   
+   public void setTickits(){
        if(rs == null)
            try {
                rs = dbInfo.getUserTickets();
@@ -169,7 +177,6 @@ public class UserBean  implements Serializable {
         } catch (NoAccessException ex) {
             message = ex.getMessage();
         }
-       return rs;
    }
    
    public void cancelTicket(int code) {
@@ -188,8 +195,19 @@ public class UserBean  implements Serializable {
        this.loginOrUser = "edit";
    }
    
+   
+   
    public void logOut(){
         dbInfo.close();
+        this.setUserID(null);
+        this.setPhone(null);
+        this.setPassword(null);
+        this.setName(null);
+        this.setMassege(null);
+        this.setEmail(null);
+        this.setCity(null);
+        this.setAddress(null);
+        this.activTab = "home";
         FacesContext.getCurrentInstance().getExternalContext().invalidateSession(); 
     }
     
@@ -251,6 +269,16 @@ public class UserBean  implements Serializable {
       this.password = password;
    } 
    
+   public String getPassword2()
+   {
+       return password2;
+   }
+   
+   public void setPassword2( String password2 )
+   {
+      this.password2 = password2;
+   } 
+   
   public String getUserID()
    {
        return userID;
@@ -286,7 +314,7 @@ public class UserBean  implements Serializable {
        return message;
    }
    
-   public void setMassege(String massege)
+   private void setMassege(String massege)
    {
        this.message = massege;
    }

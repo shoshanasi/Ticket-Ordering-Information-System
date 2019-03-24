@@ -31,7 +31,7 @@ import org.primefaces.model.ScheduleModel;
 
 /**
  *
- * @author Shani
+ * @author shani
  */
 @ManagedBean()
 @ViewScoped

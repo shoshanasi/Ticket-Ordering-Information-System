@@ -1,9 +1,11 @@
+package newuserbean;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package newuserbean;
+
 
 import eventsinformation.*;
 import static eventsinformation.EventsInfoImpl.rowSetToList;
@@ -25,7 +27,7 @@ import org.primefaces.model.ScheduleEvent;
 
 /**
  *
- * @author Shani
+ * @author shani
  */
 @ManagedBean()
 @ViewScoped
@@ -203,20 +205,27 @@ public class Search implements Serializable{
         }
         else{
             textList = dbInfo.getShowsList(quary);
+            dbInfo.close();
             return textList;
         }
     }
     
     public List<String> completeCategory() throws SQLException{
-        return dbInfo.getCategoriesList();
+        List<String> temp = dbInfo.getCategoriesList();
+        dbInfo.close();
+        return temp;
     }
     
     public List<String> completeCity() throws SQLException {
-        return dbInfo.getCitiesList();
+        List<String> temp = dbInfo.getCitiesList();
+        dbInfo.close();
+        return temp;
     }
     
     public List<String> completeTheater() throws SQLException {
-        return rowSetToList(dbInfo.getTheaters(), "theater_name");        
+        List<String> temp = rowSetToList(dbInfo.getTheaters(), "theater_name");
+        dbInfo.close();
+        return temp;
     }
     
     
@@ -230,6 +239,7 @@ public class Search implements Serializable{
         try {
             java.sql.Date sd = new java.sql.Date(dateShow.getTime());
             FilteredRowSet rs = dbInfo.SearchShow(null, showNames, null, sd, null);
+            dbInfo.close();
             if(rs.size() != 1){
                 this.showSearch();
             }
@@ -279,6 +289,7 @@ public class Search implements Serializable{
             while(rs.next()) {
                 showList.add(new Show(rs.getInt("show_code"), rs.getString("show_name"), rs.getString("category_name"), rs.getString("description"), rs.getString("year_produced"), rs.getString("show_length")));
             }
+            dbInfo.close();
         } catch (SQLException ex) {
             this.setMessage("we had problems connecting the database please try again later");
         }
@@ -302,6 +313,7 @@ public class Search implements Serializable{
             this.show.setName(show.getName());
             this.show.setYear(show.getYear());
             this.show.setLength(show.getLength());
+            this.show.setDescription(show.getDescription());
             showCode = show.getShowCode();
         }
         else{
@@ -317,6 +329,7 @@ public class Search implements Serializable{
                 rs = dbInfo.SearchEvents(sd, sd, showCode, cityName);
             }
             rs.beforeFirst();
+            dbInfo.close();
             eventList = new ArrayList<>();
             while(rs.next()) {
                 eventList.add(new EventBean(rs.getInt("event_code"), rs.getDate("event_date"), rs.getTime("event_time"), rs.getInt("theater_code"), rs.getString("city_name"), rs.getInt("available"), this.showCode));
@@ -333,18 +346,19 @@ public class Search implements Serializable{
 
     public void setSlectedRowEvent(EventBean event) {
         slectedRowEvent = event;
+        System.out.println(slectedRowEvent);
         try {
             FilteredRowSet rs = dbInfo.getEventTickets(event.getCode());
-            
+            dbInfo.close();
             rs.beforeFirst();
             seats = new ArrayList<>();
             while(rs.next()) {
                 seats.add(new SeatBean(rs.getInt("row"),rs.getInt("seat"), rs.getDouble("price"), rs.getString("assigned"), rs.getInt("ticket_no")));
-                }
+            }
         } catch (SQLException ex) {
             this.setMessage("we had problems connecting the database please try again later");
         }
-        RequestContext.getCurrentInstance().execute("PF('seatDialog').show()");
+        RequestContext.getCurrentInstance().execute("PF('seatDialog').show();");
     }
     
     public boolean bookTicket(SeatBean ticket){
@@ -363,82 +377,7 @@ public class Search implements Serializable{
         return false;
     }
 
-    public boolean deleteShow(Show show) {
-        if(dbInfo instanceof EventsManagerInfoImpl){
-            try {
-                ((EventsManagerInfoImpl)dbInfo).deleteShow(show.getShowCode());
-            } catch (SQLException ex) {
-                this.setMessage("we had problems connecting the database please try again later");
-            }
-            showList.remove(show);
-            return true;
-        }
-        this.setMessage("you arent a manager");
-        return false;
-    }
     
-    
-    public void addShow(){
-        try {
-            if(show.showOk()){
-                if(dbInfo instanceof EventsManagerInfoImpl){
-                    ((EventsManagerInfoImpl)dbInfo).insertShow(show);
-                    for(int i = 0; i<showList.size(); i++){
-                        if(showList.get(i).getShowCode() == show.getShowCode())
-                            showList.remove(i);
-                    }
-                    showList.add(show);
-                    RequestContext.getCurrentInstance().execute("PF('eventDialog').hide()");
-                }
-                else{
-                    this.setMessage("you arent a manager");
-                }
-            }
-            else
-                this.setMessage("you need to fill all fileds");
-        } catch (SQLException ex) {
-            this.setMessage("we had problems connecting the database please try again later");
-        }
-    }
-    
-    public boolean deleteEvent(EventBean event){
-        if(dbInfo instanceof EventsManagerInfoImpl){
-            try {
-                ((EventsManagerInfoImpl)dbInfo).deleteEvent(event.getCode());
-            } catch (SQLException ex) {
-                this.setMessage("we had problems connecting the database please try again later");
-            }
-            eventList.remove(event);
-            return true;
-        }
-        this.setMessage("you arent a manager");
-        return false;
-    }
-    
-    
-    public void addEvent(){
-        this.event.setShow(showCode);
-        try {
-            if(event.eventOk()){
-                if(dbInfo instanceof EventsManagerInfoImpl){
-                    ((EventsManagerInfoImpl)dbInfo).insertEvent(event);
-                    for(int i = 0; i<eventList.size(); i++){
-                        if(eventList.get(i).getCode() == event.getCode())
-                            eventList.remove(i);
-                    }
-                    eventList.add(event);
-                    RequestContext.getCurrentInstance().execute("PF('eventDialog').hide()");
-                }
-                else{
-                    this.message = "you arent a manager";
-                }
-            }
-            else
-                this.message = "you need to fill all fileds";
-        } catch (SQLException ex) {
-            this.setMessage("we had problems connecting the database please try again later");
-        }
-    }
     
     
     
