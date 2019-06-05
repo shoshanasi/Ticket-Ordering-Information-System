@@ -1,33 +1,18 @@
 
 package eventsinformation;
 
-
 import newuserbean.*;
-import java.sql.Blob;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import javax.sql.RowSet;
-import javax.sql.rowset.FilteredRowSet;
-import javax.sql.rowset.RowSetFactory;
-import javax.sql.rowset.RowSetProvider;
-
+import javax.naming.*;
+import javax.sql.*;
+import javax.sql.rowset.*;
 
 /**
  * Implementation for EventsInfo interface.
- * In order to instantiate this object you need user and password to access the 
- * Database.
  * This class establishes the connection and fetches the information of the 
  * various methods from the Events web site database. It also remembers the 
  * user logged in if provided this information. 
@@ -35,9 +20,7 @@ import javax.sql.rowset.RowSetProvider;
  * @author Shani Shapiro
  */
 public class EventsInfoImpl implements EventsInfo {
-    
-    private final String dbUser;   
-    private final String dbPass;    
+          
     Connection conn;
     final RowSetFactory factory;
     private DataSource ds;
@@ -48,14 +31,10 @@ public class EventsInfoImpl implements EventsInfo {
     /**
      * Constructor for a new object getting information from the db, but not
      * associated with any user.
-     * @param dbUser username for database access.
-     * @param dbPass the password for database access.
      * @throws SQLException 
      */
-    public EventsInfoImpl(String dbUser, String dbPass) throws SQLException {
+    public EventsInfoImpl() throws SQLException {
                       
-        this.dbUser = dbUser;
-        this.dbPass = dbPass;
         conn = null;
         factory = RowSetProvider.newFactory();
         clientUserID = null;
@@ -68,21 +47,7 @@ public class EventsInfoImpl implements EventsInfo {
             Logger.getLogger(EventsInfoImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    /**
-     * Constructor for a new object getting information from the db with same 
-     * db access as the received userInfo, associated 
-     * with the user in the received EventsInfoImpl object.
-     * @param userInfo the object from who to extract the db access and user 
-     * information from.
-     * @throws SQLException 
-     */
-    EventsInfoImpl(EventsInfoImpl userInfo) throws SQLException {
-        this(userInfo.dbUser, userInfo.dbPass);
-        clientUserID = userInfo.getUserID();
-        isManager = userInfo.isManager();
-    }
-    
+   
     public static List<String> rowSetToList(RowSet rs, String columnLable) throws SQLException {
         List<String> columnList = new ArrayList<>();
         rs.beforeFirst();
@@ -96,17 +61,22 @@ public class EventsInfoImpl implements EventsInfo {
      * Get a PreparedStatment with the given query 
      * by establishing a connection to database if needed. 
      * @param query the query we want to send to the database.
+     * @param generateKey true if the statement needs to return the db 
+     * generated key.
      * @return PreparedStatement
      * @throws SQLException 
      */
-    synchronized PreparedStatement createPreparedStatment(String query) throws SQLException {
+    synchronized PreparedStatement createPreparedStatment(String query, 
+            boolean generateKey) throws SQLException {
         
         try {
             if(conn == null) {                
-                conn = ds.getConnection(dbUser, dbPass);                
+                conn = ds.getConnection();                
             }
-                        
-            return conn.prepareStatement(query);//, Statement.RETURN_GENERATED_KEYS);
+            if(generateKey) {
+                return conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            }                        
+            return conn.prepareStatement(query);
         }
         catch (SQLException e) {
             close();
@@ -114,7 +84,21 @@ public class EventsInfoImpl implements EventsInfo {
         }
     }
     
-        
+    /*
+    * Calling createPreparedStatment(query, true).
+    */
+    synchronized PreparedStatement createPreparedStatmentKey(String query) 
+            throws SQLException {
+        return createPreparedStatment(query, true);
+    }
+    
+    /*
+    * Calling createPreparedStatment(query, false).
+    */
+    synchronized PreparedStatement createPreparedStatment(String query) 
+            throws SQLException {
+        return createPreparedStatment(query, false);
+    }  
     
     @Override
     public synchronized void close() {
@@ -148,13 +132,25 @@ public class EventsInfoImpl implements EventsInfo {
      * @throws SQLException 
      */
     private FilteredRowSet getTable(String tableName) throws SQLException {
-        String query = "SELECT * FROM " + tableName;
+        
+        return getTableColumns("*", tableName);
+    }
+    
+    /**
+     * Gets all the entries from a chosen table with the specified columns 
+     * from the database.
+     * @param columns table columns to receive.
+     * @param tableName name of table to receive.
+     * @return a FilteredRowSet with all table rows and chosen fields.
+     * @throws SQLException 
+     */
+    FilteredRowSet getTableColumns(String columns, String tableName) throws SQLException {
+        String query = "SELECT " + columns + " FROM " + tableName;
         ResultSet rs;
         FilteredRowSet filteredRS;
         PreparedStatement pstat = null;
         try {
             filteredRS = factory.createFilteredRowSet();
-            
             synchronized(this) {
                 pstat = createPreparedStatment(query); 
                 rs = pstat.executeQuery();
@@ -168,8 +164,7 @@ public class EventsInfoImpl implements EventsInfo {
             if(pstat != null)
                 pstat.close();
             close();
-        }
-               
+        }               
         return filteredRS;
     }
     
@@ -248,7 +243,7 @@ public class EventsInfoImpl implements EventsInfo {
                 filteredRS.populate(rs); 
             }
             
-            InitalList pr = new InitalList(initial, colomnName);
+            ListPredicate pr = new ListPredicate(initial, colomnName);
             filteredRS.setFilter(pr);
         }
         catch(SQLException ex) {
@@ -258,8 +253,7 @@ public class EventsInfoImpl implements EventsInfo {
             if(pstat != null)
                 pstat.close();
             close();
-        }
-                       
+        }                       
         return filteredRS;
     }
 
@@ -279,7 +273,7 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public synchronized boolean insertUser(UserBean user) throws SQLException, NoAccessException {
+    public synchronized boolean insertUser(MainBean user) throws SQLException, NoAccessException {
         if(clientUserID != null) {
             throw new NoAccessException("User already logedd in.");
         }
@@ -318,6 +312,53 @@ public class EventsInfoImpl implements EventsInfo {
         }
     }
 
+    
+    @Override
+    public boolean editUser(MainBean user) throws SQLException, NoAccessException {
+        if(clientUserID == null) {
+            throw new NoAccessException("User not logedd in.");
+        }
+        String updateUser = "UPDATE users SET "
+                + " email = ?, user_address = ?, user_phone = ? ";
+        if(user.getPassword() != null) {
+            updateUser += ", password = ? ";
+        }
+        if(user.getCity() != null) {
+            updateUser += ", city_name = ? ";
+        }
+        if(user.getName() != null) {
+            updateUser += ", user_name = ? ";
+        }
+        updateUser  += " WHERE user_id = ? ";
+        PreparedStatement pstat = null;        
+        try {            
+            pstat = createPreparedStatment(updateUser);            
+            pstat.setString(1, user.getEmail());
+            pstat.setString(2, user.getAddress());
+            pstat.setString(3, user.getPhone());
+            int placeHolder = 4;
+            if(user.getPassword() != null) {
+                pstat.setString(placeHolder++, user.getPassword());
+            }
+            if(user.getCity() != null) {
+                pstat.setString(placeHolder++, user.getCity());
+            }
+            if(user.getName() != null) {
+                pstat.setString(placeHolder++, user.getName());
+                updateUser += ", user_name = ? ";
+            }
+            pstat.setString(placeHolder, clientUserID);
+            
+            return pstat.executeUpdate() != 0;            
+        } 
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    
     @Override
     public synchronized boolean setUser(String user, String pass) throws SQLException, NoAccessException {
         if(clientUserID != null) {
@@ -369,7 +410,7 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public synchronized boolean setUser(UserBean user) throws SQLException, NoAccessException {
+    public synchronized boolean setUser(MainBean user) throws SQLException, NoAccessException {
         if(clientUserID != null) {
             throw new NoAccessException("User already logedd in.");
         }
@@ -393,7 +434,7 @@ public class EventsInfoImpl implements EventsInfo {
                 user.setCity(rs.getString("city_name"));
                 
                 clientUserID = userID;
-                isManager = !rs.getString("permission").equals("admin");
+                isManager = rs.getString("permission").equals("admin");
                 return true;
             }
             else {
@@ -410,7 +451,7 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public synchronized FilteredRowSet SearchShow(String category, String name, String year, Date date, String city)
+    public synchronized FilteredRowSet searchShow(String category, String name, String year, Date date, String city)
             throws SQLException {        
         String query = "SELECT S.* " + 
                 "FROM show_category AS SC " +
@@ -420,10 +461,15 @@ public class EventsInfoImpl implements EventsInfo {
                 "NATURAL JOIN cities AS C " +
                 "WHERE SC.category_name LIKE ? " +
                 "AND S.show_name LIKE ? " +
-                "AND S.year_produced LIKE ? " +
-                "AND E.event_date LIKE ? " +
-                "AND C.city_name LIKE ?" +
-                "GROUP BY show_code";
+                "AND S.year_produced LIKE ? " +                
+                "AND C.city_name LIKE ? ";
+        if((date != null)) {
+            query += "AND E.event_date LIKE ? ";
+        }
+        else {
+            query += "AND E.event_date >= ? ";
+        }        
+        query += " GROUP BY show_code ";
 
         ResultSet rs;
         PreparedStatement pstat = null;
@@ -438,11 +484,15 @@ public class EventsInfoImpl implements EventsInfo {
             if((name != null))
                 pstat.setString(2, name);
             if((year != null))
-                pstat.setString(3, year);
-            if((date != null))
-                pstat.setDate(4, date);
+                pstat.setString(3, year);            
             if((city != null))
-                pstat.setString(5, city);
+                pstat.setString(4, city);
+            if((date != null)) {
+                pstat.setDate(5, date);
+            }
+            else {
+                pstat.setDate(5, new java.sql.Date((new java.util.Date()).getTime()));
+            }
 
             rs = pstat.executeQuery();
             filteredRS = factory.createFilteredRowSet();
@@ -480,7 +530,6 @@ public class EventsInfoImpl implements EventsInfo {
                 theater.setPhone(rs.getString("phone"));
                 theater.setWebsite(rs.getString("website"));
                 theater.setCity(rs.getString("city_name"));   
-                
                 return true;
             }
             else {
@@ -494,6 +543,17 @@ public class EventsInfoImpl implements EventsInfo {
                 pstat.close();
             close();
         }   
+    }
+    
+    public String getTheaterCode(String theater) throws SQLException {
+        String query = "SELECT theater_code FROM theaters "
+                + "WHERE theater_name LIKE ?";
+        PreparedStatement pstat = createPreparedStatment(query);        
+        pstat.setString(1, theater);
+        ResultSet rs = pstat.executeQuery();        
+        rs.next();
+        return rs.getString("theater_code");
+        
     }
 
     @Override
@@ -525,13 +585,12 @@ public class EventsInfoImpl implements EventsInfo {
             if(pstat != null)
                 pstat.close();
             close();
-        }
-        
+        }        
         return filteredRS;   
     }
 
     @Override
-    public synchronized boolean getShow(Show show) throws SQLException {
+    public synchronized boolean getShow(ShowBean show) throws SQLException {
         String query = "SELECT * FROM shows "
                 + " WHERE show_code = ?";
         ResultSet rs = null;
@@ -547,8 +606,7 @@ public class EventsInfoImpl implements EventsInfo {
                 show.setDescription(rs.getString("description"));
                 show.setYear(rs.getString("year_produced"));
                 show.setLength(rs.getString("show_length"));     
-                return true;
-                
+                return true;                
             }
             else {
                 return false;
@@ -625,8 +683,7 @@ public class EventsInfoImpl implements EventsInfo {
             if(pstat != null)
                 pstat.close();
             close();
-        }
-        
+        }        
         return filteredRS;
     }
 
@@ -645,7 +702,7 @@ public class EventsInfoImpl implements EventsInfo {
                 event.setDate(rs.getDate("event_date"));
                 event.setTime(rs.getTime("event_time"));
                 event.setShow(rs.getInt("show_code"));
-                event.setTheater(rs.getInt("theater_code"));
+                event.setTheater(rs.getString("theater_name"));
                 
                 return true;
             }
@@ -669,13 +726,13 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public FilteredRowSet SearchEvents(Date fromDate, Date toDate, 
+    public FilteredRowSet searchEvents(Date fromDate, Date toDate, 
             Integer showCode, String city) throws SQLException {
         String query = "SELECT * FROM events "
                 + " NATURAL JOIN shows "
                 + " NATURAL JOIN theaters "
                 + " NATURAL JOIN (SELECT event_code, COUNT(*) AS available "
-                + " FROM tickets WHERE assigned = 'no' GROUP BY event_code) "
+                + " FROM tickets WHERE user_id IS NULL GROUP BY event_code) "
                 + " AS available_tickets "
                 + " WHERE ";
         if(city != null) {
@@ -684,7 +741,13 @@ public class EventsInfoImpl implements EventsInfo {
         else {
             query += " ? ";
         }
-        query += " AND event_date >= ? ";
+        
+        if(fromDate != null) {
+            query += " AND event_date >= ? ";
+        }
+        else {
+            query += " AND ? ";
+        }
         if(toDate != null) {
             query += " AND event_date <= ? ";
         }
@@ -730,7 +793,6 @@ public class EventsInfoImpl implements EventsInfo {
                 }                               
                 ResultSet rs = pstat.executeQuery();
 
-                
                 filteredRS = factory.createFilteredRowSet();
                 filteredRS.populate(rs);
             }
@@ -740,7 +802,6 @@ public class EventsInfoImpl implements EventsInfo {
                 pstat.close();
             close();
         }
-        
         return filteredRS;
     }
 
@@ -765,14 +826,14 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public synchronized boolean insertPicture(int showCode, Blob pic) throws SQLException {
+    public synchronized boolean insertPicture(int showCode, String pic) throws SQLException {
         String query = "INSERT INTO pictures (show_code, pic, user_id) "
                 + "VALUES (?, ?, ?)";
         PreparedStatement pstat = null;
         try {
             pstat = createPreparedStatment(query);
             pstat.setInt(1, showCode);
-            pstat.setBlob(2, pic);
+            pstat.setString(2, pic);
             pstat.setString(3, clientUserID);
             
             return pstat.executeUpdate() != 0;
@@ -801,9 +862,7 @@ public class EventsInfoImpl implements EventsInfo {
             if(pstat != null)
                 pstat.close();
             close();
-        }
-        
-        
+        }        
     }
 
     @Override
@@ -868,8 +927,7 @@ public class EventsInfoImpl implements EventsInfo {
         }
         else {
             throw new NoAccessException("UserID/Password wrong or not current user.");
-        }
-        
+        }        
     }
 
     /**
@@ -908,23 +966,28 @@ public class EventsInfoImpl implements EventsInfo {
 
     @Override
     public synchronized boolean reserveTicket(int ticketNo) throws SQLException, NoAccessException {
-        /*if(clientUserID == null) {
+        
+        if(clientUserID == null) {
             throw new NoAccessException("No user loged in to reserve ticket.");
         }
+        
         String reserveTicket = "UPDATE tickets " +
-            " SET user_id = ?, assigned = yes " +
-            " WHERE ticket_no = ? AND assigned = no ";
-        try (PreparedStatement pstat = createPreparedStatment(reserveTicket)) {
+            " SET user_id = ? " +
+            " WHERE ticket_no = ? AND user_id IS NULL ";
+        PreparedStatement pstat = null;  
+        
+        try {            
+            pstat = createPreparedStatment(reserveTicket);
             pstat.setString(1, clientUserID);
             pstat.setInt(2, ticketNo);
-                        
-            return pstat.executeUpdate() != 0;
-            
+                
+            return pstat.executeUpdate() != 0;            
         }       
         finally {
+            if(pstat != null)
+                pstat.close();
             close();
-        }*/
-        return true;
+        }
     }
 
     @Override
@@ -933,7 +996,7 @@ public class EventsInfoImpl implements EventsInfo {
             throw new NoAccessException("No user loged in to cancel ticket.");
         }
         String cancelTicket = "UPDATE tickets " +
-            " SET user_id = null, assigned = \"no\" " +
+            " SET user_id = null " +
             " WHERE ticket_no = ? ";
         if(!isManager) {
             cancelTicket += " AND user_id = ? ";
@@ -945,8 +1008,7 @@ public class EventsInfoImpl implements EventsInfo {
             pstat.setInt(1, ticketNo);
             if(!isManager) {
                 pstat.setString(2, clientUserID);
-            }
-                        
+            }                        
             return pstat.executeUpdate() != 0;            
         }       
         finally {
@@ -962,14 +1024,13 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public synchronized UserBean getUserInfo() throws SQLException, NoAccessException {
+    public synchronized MainBean getUserInfo() throws SQLException, NoAccessException {
         if(clientUserID == null)
             throw new NoAccessException("No user associated with this class.");
                 
-        UserBean user = new UserBean();
+        MainBean user = new MainBean();
         user.setUserID(clientUserID);
         getUserInfo(user);
-        //isManager = user.isManager();
         return user;
         
     }
@@ -979,7 +1040,7 @@ public class EventsInfoImpl implements EventsInfo {
      * @param user
      * @throws SQLException 
      */
-    synchronized void getUserInfo(UserBean user) throws SQLException {
+    synchronized void getUserInfo(MainBean user) throws SQLException {
         
         String query = "SELECT * FROM users WHERE user_id = ? ";
         ResultSet rs = null;
@@ -992,11 +1053,8 @@ public class EventsInfoImpl implements EventsInfo {
                 user.setEmail(rs.getString("email"));
                 user.setAddress(rs.getString("user_address"));
                 user.setPhone(rs.getString("user_phone"));
-                user.setCity(rs.getString("city_name"));
-                
-                
-            }
-            
+                user.setCity(rs.getString("city_name"));                
+            }            
         } 
         finally {
             if(rs != null)
@@ -1008,7 +1066,7 @@ public class EventsInfoImpl implements EventsInfo {
     }
 
     @Override
-    public synchronized boolean setUserInfo(UserBean user) throws SQLException, NoAccessException {
+    public synchronized boolean setUserInfo(MainBean user) throws SQLException, NoAccessException {
         if(clientUserID == null)
             throw new NoAccessException("No user associated with this class.");
         return setAnyUserInfo(clientUserID, user);
@@ -1017,12 +1075,12 @@ public class EventsInfoImpl implements EventsInfo {
     /**
      * Updates given user's mane, email, address, phone and city.
      * @param userID of the user who's information should be changed.
-     * @param user a UserBean with all fields filled. If a filled is null the 
-     * database will lose the previous information.
+     * @param user a MainBean with all fields filled. If a filled is null the 
+ database will lose the previous information.
      * @return true if updated successful.
      * @throws SQLException
      */
-    synchronized boolean setAnyUserInfo(String userID, UserBean user) throws SQLException {
+    synchronized boolean setAnyUserInfo(String userID, MainBean user) throws SQLException {
         String query = "UPDATE users "
                 + "SET user_name = ? , email = ? , user_address = ? , "
                 + "user_phone = ? , city_name = ? "
@@ -1036,9 +1094,30 @@ public class EventsInfoImpl implements EventsInfo {
             pstat.setString(4, user.getPhone());
             pstat.setString(5, user.getCity());
             pstat.setString(6, userID);
-            return pstat.executeUpdate() != 0;
-            
-            
+            return pstat.executeUpdate() != 0;            
+        } 
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    synchronized boolean setAnyUserInfo(String userID, User user) throws SQLException {
+        String query = "UPDATE users "
+                + "SET user_name = ? , email = ? , user_address = ? , "
+                + "user_phone = ? , city_name = ? "
+                + "WHERE user_id = ? ";
+        PreparedStatement pstat = null;  
+        try {
+            pstat = createPreparedStatment(query); 
+            pstat.setString(1, user.getName());
+            pstat.setString(2, user.getEmail());
+            pstat.setString(3, user.getAddress());
+            pstat.setString(4, user.getPhone());
+            pstat.setString(5, user.getCity());
+            pstat.setString(6, userID);
+            return pstat.executeUpdate() != 0;            
         } 
         finally {
             if(pstat != null)
@@ -1049,14 +1128,16 @@ public class EventsInfoImpl implements EventsInfo {
     
     @Override
     public synchronized FilteredRowSet getEventTickets(int eventCode) throws SQLException {
-        String query = "SELECT S.*, T.ticket_no, T.assigned, T.price "
+        String query = "SELECT S.*, T.ticket_no, T.assigned, T.price, "
+                + " T.user_id IS NULL AS available "
                 + " FROM tickets AS T "
-                + " NATURAL JOIN seats AS S " 
+                + " LEFT JOIN seats AS S "
+                + " ON T.seat_id = S.seat_id " 
                 + " WHERE event_code = ? "
-                 ;
+                + " ORDER BY S.row, S.seat " ;
         PreparedStatement pstat = null;
         try {
-            pstat = createPreparedStatment(query); 
+            pstat = createPreparedStatment(query);
             pstat.setInt(1, eventCode);
             ResultSet rs = pstat.executeQuery();
 
@@ -1072,4 +1153,50 @@ public class EventsInfoImpl implements EventsInfo {
         }
     }
     
+    @Override
+    public synchronized boolean reserveTickets(List<Integer> tickets) throws SQLException, NoAccessException {
+        
+        if(clientUserID == null) {
+            throw new NoAccessException("No user loged in to reserve ticket.");
+        }
+        
+        String reserveTicket = "UPDATE tickets " +
+            " SET user_id = ? " +
+            " WHERE ticket_no = ? AND user_id IS NULL ";
+        PreparedStatement pstat = null;  
+        
+        try {            
+            pstat = createPreparedStatment(reserveTicket);
+            conn.setAutoCommit(false);
+            pstat.setString(1, clientUserID);
+            
+            for(int ticketNo: tickets) {
+                pstat.setInt(2, ticketNo);
+                pstat.addBatch();
+            }
+            pstat.executeBatch();
+            conn.commit();
+            return true;            
+        } 
+        catch(SQLException E) {
+            if(conn != null) {
+                System.err.print("Transaction is being rolled back");
+                conn.rollback();
+            }
+            throw E;
+        }
+        finally {
+            conn.setAutoCommit(true);
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }  
+    
+    @Override
+    public void logOut(){
+        this.clientUserID = null;
+        this.isManager = false;
+        close();
+    }
 }

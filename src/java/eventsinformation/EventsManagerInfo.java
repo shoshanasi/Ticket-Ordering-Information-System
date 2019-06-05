@@ -2,21 +2,23 @@
 package eventsinformation;
 
 
+import java.sql.Date;
 import java.sql.SQLException;
 import javax.naming.NamingException;
 import javax.sql.rowset.FilteredRowSet;
 import newuserbean.EventBean;
-import newuserbean.Show;
+import newuserbean.ShowBean;
 import newuserbean.TheaterBean;
-import newuserbean.UserBean;
+import newuserbean.User;
+import newuserbean.MainBean;
 
 /**
- * Represents an interface for communication with the database for a 
+ * Represents an interface for communication with the database for for a 
  * privileged user with manager permission.
- * Can Add, Edit, Delete and retrieve Show categories, Shows, Theaters, Events,
- * Tickets and all User information.
- * This interface extends EventsInfo, so it already has all capabilities of a
- * normal user.
+ * Can Add, Edit, Delete and retrieve ShowBean categories, Shows, Theaters, Events,
+ Tickets and all User information.
+ This interface extends EventsInfo, so it already has all capabilities of a
+ normal user.
  * @author Shani Shapiro
  */
 public interface EventsManagerInfo extends EventsInfo {
@@ -34,9 +36,8 @@ public interface EventsManagerInfo extends EventsInfo {
      * @param cityName the city to be deleted.
      * @return true if City deleted successfully, false otherwise.
      * @throws java.sql.SQLException
-     * @throws javax.naming.NamingException
      */
-    public boolean deleteCity(String cityName) throws SQLException, NamingException;
+    public boolean deleteCity(String cityName) throws SQLException ;
     
     /**
      * Add a category to database categories table.
@@ -67,6 +68,37 @@ public interface EventsManagerInfo extends EventsInfo {
     public boolean insertTheater(TheaterBean theater) throws SQLException;
     
     /**
+     * Edits the given Theatre's table with the edited information in the 
+     * theatre bean. Can't change the code or seat layout.
+     * @param theater the theatre bean with a theater's code and all information 
+     * including: name, address, phone, website, city.
+     * @return true if theatre is edited, false otherwise.
+     * @throws SQLException 
+     */
+    public boolean editTheater(TheaterBean theater) throws SQLException;
+    
+    /**
+     * Edits the given Show's table with the edited information in the 
+     * show bean. Can't change the show code.
+     * @param show the show bean with a Show's code and all information 
+     * including: name, description, year and length.
+     * @return true if show is edited, false otherwise.
+     * @throws SQLException 
+     */
+    public boolean editShow(ShowBean show) throws SQLException;
+    
+    /**
+     * Edits the given event's table with the edited information in the 
+     * event bean. Can't change the event code.
+     * @param event the event bean with event's code and all information 
+     * including: date, time, show and theatre.
+     * @return true if event is edited, false otherwise.
+     * @throws SQLException 
+     */
+    public boolean editEvent(EventBean event) throws SQLException;
+    
+    
+    /**
      * Deletes the theatre and corresponding events and seats from the database.
      * @param theaterCode the theatre's identifier.
      * @return true if deleted successfully, false otherwise.
@@ -81,7 +113,7 @@ public interface EventsManagerInfo extends EventsInfo {
      * @return true if show is added, false otherwise.
      * @throws SQLException 
      */
-    public boolean insertShow(Show theater) throws SQLException;
+    public boolean insertShow(ShowBean theater) throws SQLException;
     
     /**
      * Deletes the show and corresponding reviews and pictures from the database.
@@ -107,6 +139,14 @@ public interface EventsManagerInfo extends EventsInfo {
      * @throws SQLException 
      */
     public boolean deleteEvent(int eventCode) throws SQLException;
+    
+    /**
+     * Get a FilteredRowSet with rows containing the information of registered 
+     * users in the DB users table.
+     * @return FilteredRowSet with the all users info.
+     * @throws java.sql.SQLException
+     */
+    public FilteredRowSet getUsers() throws SQLException;
     
     /**
      * Gets all the tickets info for a given event. Including the seat info.
@@ -180,18 +220,51 @@ public interface EventsManagerInfo extends EventsInfo {
     /**
      * Gets user information from the db, for the userID received.
      * @param userID the user for whom to get the information.
-     * @return UserBean filled with the user information. 
+     * @return MainBean filled with the user information. 
      * @throws SQLException
      */
-    public UserBean getUserInfo(String userID) throws SQLException;
+    public MainBean getUserInfo(String userID) throws SQLException;
     
+    
+            
     /**
      * Updates/Changes the received user info with the given information.
-     * @param user UserBean filled with the user info to be updated.
+     * @param user MainBean filled with the user info to be updated.
      * @return true if updated successfully, false otherwise.
      * @throws SQLException
      */
     @Override
-    public boolean setUserInfo(UserBean user) throws SQLException;
+    public boolean setUserInfo(MainBean user) throws SQLException;
     
+    public boolean setUserInfo(User user) throws SQLException;
+    
+     /**
+     * Gets all the events that match the search parameters ordered by time. 
+     * Includes all the fields from the db events table 
+     * and matching columns from the shows and theatres tables.
+     * @param fromDate from what date of events, if null searches from current date onwards.
+     * @param toDate to what date of events, if null searches all.
+     * @param showCode the db identifier for the show, if null than ignored.
+     * @param city the city of the event.
+     * @return a FilteredRowSet with the whole events table
+     * and corresponding fields from the shows and theatres table.
+     * including the corresponding code, name and category of the show.
+     * @throws SQLException 
+     */
+    @Override
+    public FilteredRowSet searchEvents(Date fromDate, Date toDate, 
+            Integer showCode, String city) throws SQLException;
+    
+    /**
+     * Returns the events that match the parameters given.
+     * Any null value is just ignored.
+     * Should call close() on this class after using the returned ResultSet.
+     * @param category the show category.
+     * @param name the name of show.
+     * @param year shows produced in given year.
+     * @return a FilteredRowSet with all events in DB that match the search criteria.
+     * @throws java.sql.SQLException
+     */
+    public FilteredRowSet searchShow(String category, String name, String year)
+            throws SQLException;
 }

@@ -1,24 +1,22 @@
 
 package eventsinformation;
 
-import java.sql.Blob;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import javax.sql.rowset.FilteredRowSet;
 import newuserbean.EventBean;
-import newuserbean.Show;
 import newuserbean.ShowBean;
 import newuserbean.TheaterBean;
-import newuserbean.UserBean;
+import newuserbean.MainBean;
 
 /**
  * Represents an interface for a user to get non-privileged information about 
  * Events from the Events web site database. 
  * The information an object from this type can get, includes receiving 
- * information about Show categories, Shows,Theaters, Events etc. 
- * Can also login as a user or subscribe new user to the database, as well as 
- * reserving or canceling tickets for the logged in user.
+ information about ShowBean categories, Shows,Theaters, Events etc. 
+ Can also login as a user or subscribe new user to the database, as well as 
+ reserving or canceling tickets for the logged in user.
  * @author Shani Shapiro
  */
 public interface EventsInfo {
@@ -89,8 +87,16 @@ public interface EventsInfo {
      * @throws SQLException 
      * @throws eventsinformation.NoAccessException 
      */
-    public boolean insertUser(UserBean user) throws SQLException, NoAccessException;
+    public boolean insertUser(MainBean user) throws SQLException, NoAccessException;
     
+    /**
+     * Edits this user's information, if a user is logged in.
+     * @param user the class with user's edited information.
+     * @return false if no such could not update user information.
+     * @throws SQLException 
+     * @throws NoAccessException 
+     */
+    public boolean editUser(MainBean user) throws SQLException, NoAccessException;
     /**
      * Checks if this user and password are correct and if so, is he a
      * manager or normal user and updates the object.
@@ -112,7 +118,7 @@ public interface EventsInfo {
      * @throws SQLException 
      * @throws NoAccessException 
      */
-    public boolean setUser(UserBean user) throws SQLException, NoAccessException;
+    public boolean setUser(MainBean user) throws SQLException, NoAccessException;
     
     /**
      * Checks if the user id is available for use or already used.
@@ -134,7 +140,7 @@ public interface EventsInfo {
      * @return a FilteredRowSet with all events in DB that match the search criteria.
      * @throws java.sql.SQLException
      */
-    public FilteredRowSet SearchShow(String category, String name, String year, 
+    public FilteredRowSet searchShow(String category, String name, String year, 
             Date date, String city) throws SQLException;
     
     /**
@@ -178,7 +184,7 @@ public interface EventsInfo {
      * @return ture if successful, false otherwise.
      * @throws SQLException 
      */
-    public boolean getShow(Show show) throws SQLException;
+    public boolean getShow(ShowBean show) throws SQLException;
     
     /**
      * Gets all the shows with all the fields from the db shows table.
@@ -229,7 +235,8 @@ public interface EventsInfo {
      /**
      * Gets all the events that match the search parameters ordered by time. 
      * Includes all the fields from the db events table 
-     * and matching columns from the shows and theatres tables.
+     * and matching columns from the shows and theatres tables, for events that
+     * have available tickets.
      * @param fromDate from what date of events, if null searches from current date onwards.
      * @param toDate to what date of events, if null searches all.
      * @param showCode the db identifier for the show, if null than ignored.
@@ -239,7 +246,7 @@ public interface EventsInfo {
      * including the corresponding code, name and category of the show.
      * @throws SQLException 
      */
-    public FilteredRowSet SearchEvents(Date fromDate, Date toDate, 
+    public FilteredRowSet searchEvents(Date fromDate, Date toDate, 
             Integer showCode, String city) throws SQLException;
     
     /**
@@ -258,7 +265,7 @@ public interface EventsInfo {
      * @return true if added successfully, false otherwise.
      * @throws SQLException 
      */
-    public boolean insertPicture(int showCode, Blob pic) throws SQLException;
+    public boolean insertPicture(int showCode, String pic) throws SQLException;
     
     /**
      * Gets all the seats info for a given theatre. 
@@ -326,6 +333,18 @@ public interface EventsInfo {
     public boolean reserveTicket(int ticketNo) throws SQLException, 
             NoAccessException;
     
+    
+    /**
+     * Reserves the given list of tickets for the user. Either books all or none.
+     * @param tickets list of ticket id's of tickets to book.
+     * @return true if successful. 
+     * @throws SQLException
+     * @throws NoAccessException
+     */
+    public boolean reserveTickets(List<Integer> tickets) 
+             throws SQLException, NoAccessException;
+    
+    
     /**
      * Cancels reservation made for this ticket, if the ticket belongs to this
      * object.
@@ -340,21 +359,21 @@ public interface EventsInfo {
     
     /**
      * Gets user information from the db, for the user associated with this object.
-     * @return UserBean filled with current user information, null if nut successful. 
+     * @return MainBean filled with current user information, null if nut successful. 
      * @throws SQLException
      * @throws NoAccessException 
      */
-    public UserBean getUserInfo() throws SQLException, NoAccessException;
+    public MainBean getUserInfo() throws SQLException, NoAccessException;
     
     /**
      * Updates/Changes the current user info with the given information.
-     * @param user UserBean filled with the user info to be updated.
+     * @param user MainBean filled with the user info to be updated.
      * @return true if updated successfully, false otherwise.
      * @throws SQLException
      * @throws NoAccessException if no user associated with this object or if 
-     * the given user is not the same as in the UserBean object.
+ the given user is not the same as in the MainBean object.
      */
-    public boolean setUserInfo(UserBean user) throws SQLException, NoAccessException;
+    public boolean setUserInfo(MainBean user) throws SQLException, NoAccessException;
     
     /**
      * Gets all the tickets info for a given event. Including the seat info,
@@ -365,4 +384,6 @@ public interface EventsInfo {
      * @throws SQLException 
      */
     public FilteredRowSet getEventTickets(int eventCode) throws SQLException;
+    
+    public void logOut();
 }

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>city table and add</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form id="city">
+            
+            <h:panelGrid columns="3" id="addcitis">
+                Add city:
+                <p:inputText id="nameText" required="true" requiredMessage="city name is required" value="#{cityBean.city}"/>
+
+                <p:commandButton value="submit" process=":managerform:city:addcitis"
+                                 update=":managerform:city" action="#{cityBean.addCity()}">
+                    <p:confirm message="are you sure you want to add the city?"/>
+                </p:commandButton>
+                <h:message id="namecityMessage" for="nameText" style="color: red" styleClass="error"/>
+            </h:panelGrid>
+            
+            <div style="height: 200px; overflow: auto;">
+                <h:dataTable id="tablecity" value="#{cityBean.cities}" cellspacing="0" var="city" rowClasses="oddRows,evenRows" headerClass="header" style="table" cellpadding="5">
+                    <h:column>
+                        <f:facet name="header">name</f:facet>
+                        <h:outputText value="#{city}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">delete</f:facet>
+                        <p:commandButton value="delete" process="@this" action="#{cityBean.deleteCity(city)}" update=":managerform:city" >
+                            <p:confirm message="are you sure you want to delete the show?"/>
+                        </p:commandButton>
+                    </h:column>
+                </h:dataTable>
+            </div>
+
+        </h:form>
+    </h:body>
+</html>
+

@@ -14,20 +14,20 @@ import javax.sql.rowset.Predicate;
 
 /**
  *
- * @author Shani
+ *
  */
-public class InitalList implements Predicate {
+public class ListPredicate implements Predicate {
     
     private String prefix;
     private final String columnLable;
     
-    public InitalList(String prefix, String columnLable) {
-        this.prefix = prefix;
+    public ListPredicate(String prefix, String columnLable) {
+        this.prefix = prefix.toLowerCase();
         this.columnLable = columnLable;
     }
     
     public void setPrefix(String prefix) {
-        this.prefix = prefix;
+        this.prefix = prefix.toLowerCase();
     }
 
     @Override
@@ -37,9 +37,9 @@ public class InitalList implements Predicate {
         
         String columnValue;        
         try {
-            columnValue = frs.getString(this.columnLable);
+            columnValue = frs.getString(this.columnLable).toLowerCase();
         } catch (SQLException ex) {
-            Logger.getLogger(InitalList.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ListPredicate.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
         
