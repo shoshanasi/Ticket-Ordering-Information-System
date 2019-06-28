@@ -6,7 +6,6 @@ import javax.faces.bean.ManagedBean;
 /**
  * A class representing a user with it's details with getters and setters.
  * Used in UserView class.
- * @author Shani
  */
 @ManagedBean(name = "user")
 @ApplicationScoped

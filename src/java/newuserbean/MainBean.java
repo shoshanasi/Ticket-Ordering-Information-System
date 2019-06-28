@@ -4,12 +4,15 @@ package newuserbean;
 import eventsinformation.*;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.sql.rowset.FilteredRowSet;
+import recommender.GenaralSimilarity;
 
 /**
 * Main bean that's kept during the whole session of browsing with the connection
@@ -37,11 +40,17 @@ public class MainBean  implements Serializable {
     private String userDisplay;
     private String message;
     
+    //getting the similerty indexs
+    private GenaralSimilarity similer;
+
     //connction to the database
     private EventsInfoImpl dbInfo;
     //the users tickets
     private FilteredRowSet tickets;
         
+    //the recommanded list for the user
+    private List<String> imagesList = new ArrayList<>();
+    
     /**
      * Constructor for the MainBean.
      * Initially capable of accessing non privileged (manager) info.
@@ -54,6 +63,7 @@ public class MainBean  implements Serializable {
         this.userDisplay = "log in";
         try {
             dbInfo = new EventsInfoImpl();
+            similer = new GenaralSimilarity();
         } catch (SQLException ex) {
             FacesMessage msg = new FacesMessage("we had problems connecting the database please try again later"+ex.getMessage());
             FacesContext.getCurrentInstance().addMessage(null, msg);
@@ -76,7 +86,7 @@ public class MainBean  implements Serializable {
                 if(this.activTab.equals("SearchFast")){
                     break;
                 }
-            case "shows":
+            case "shows1":
                 FacesContext.getCurrentInstance().getViewRoot().getViewMap().remove("search");
                 FacesContext.getCurrentInstance().getViewRoot().getViewMap().remove("show");
                 break;
@@ -130,6 +140,7 @@ public class MainBean  implements Serializable {
                 this.setPassword(null);
                 this.setPassword2(null);
                 tickets = dbInfo.getUserTickets();
+                this.similer.userRecommadsion(userID);
             }
             else{
                 this.setMassege("user not found");
@@ -223,6 +234,15 @@ public class MainBean  implements Serializable {
    public void logOut(){
         dbInfo.logOut();
         FacesContext.getCurrentInstance().getExternalContext().invalidateSession(); 
+    }
+   
+   
+    public List<String> getImagesList() {
+        return this.similer.getImagesList();
+    }
+
+    public void setImagesList(List<String> imagesList) {
+        this.imagesList = imagesList;
     }
    
    public String getActivTab(){
@@ -347,6 +367,14 @@ public class MainBean  implements Serializable {
     {
       return userDisplay;
     } 
+    
+    public GenaralSimilarity getSimiler() {
+        return similer;
+    }
+
+    public void setSimiler(GenaralSimilarity similer) {
+        this.similer = similer;
+    }
     
     
     

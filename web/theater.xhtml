@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>theaters table and add and edit</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form id="theaterpage">
+            
+            <p:commandButton value="Add" process="@this" update=":managerform:theaterpage:addtheter" action="#{theaterBean.addSetup()}" oncomplete="PF('theaterDialog').show();"/>
+            
+            <p:dialog header="Theater infromtion" widgetVar="theaterDialog" modal="true" showEffect="fade" hideEffect="fade" resizable="true">
+                <h:panelGrid columns="3" id="addtheter">
+                    name:
+                    <p:inputText id="nameText" required="true" requiredMessage="theater name is required" value="#{theaterBean.name}"/>
+                    <h:message id="nameMessage" for="nameText" styleClass="error"/>
+
+                    City:
+                    <h:selectOneMenu value="#{theaterBean.city}" id="cityInputText" required="true" requiredMessage="must choose a city" >
+                        <f:selectItem itemLabel=""/>
+                        <f:selectItems value="#{theaterBean.completeCity()}"/>
+                    </h:selectOneMenu>
+                    <h:message id="cityMessage" for="cityInputText" styleClass="error"/>
+
+                    address:
+                    <p:inputText id="addressText" required="true" requiredMessage="theater address is required" value="#{theaterBean.address}"/>
+                    <h:message id="addressMessage" for="addressText" styleClass="error"/>
+
+                    phone:
+                    <p:inputText id="phoneText" required="true" requiredMessage="theater phone is required" value="#{theaterBean.phone}"/>
+                    <h:message id="phoneMessage" for="phoneText" styleClass="error"/>
+
+                    website:
+                    <p:inputText id="websiteText" required="true" requiredMessage="theater website is required" value="#{theaterBean.website}"/>
+                    <h:message id="websiteMessage" for="websiteText" styleClass="error"/>
+
+                    rows:
+                    <p:inputText onkeypress="if(event.which &lt; 48 || event.which &gt; 57) return false;" id="rowsText" required="true" requiredMessage="theater rows is required" value="#{theaterBean.rows}" rendered="#{'0' eq theaterBean.code}"/>
+                    <p:outputLabel value="#{theaterBean.rows}" rendered="#{'0' ne theaterBean.code}"/>
+                    <h:message id="rowsMessage" for="rowsText" styleClass="error"/>
+
+                    seats:
+                    <p:inputText onkeypress="if(event.which &lt; 48 || event.which &gt; 57) return false;" id="seatsText" required="true" requiredMessage="theater seats is required" value="#{theaterBean.seats}" rendered="#{'0' eq theaterBean.code}"/>
+                    <p:outputLabel value="#{theaterBean.seats}" rendered="#{'0' ne theaterBean.code}"/>
+                    <h:message id="seatsMessage" for="seatsText" styleClass="error"/>
+
+                    <p:commandButton process=":managerform:theaterpage:addtheter" value="submit" update=":managerform:theaterpage:addtheter :managerform:theaterpage:table" action="#{theaterBean.addTheater()}">
+                        <p:confirm message="are you sure you want to add the theater?"/>
+                    </p:commandButton>
+                </h:panelGrid>
+            </p:dialog>
+            
+                
+            <div style="height: 200px; overflow: auto;">
+                <h:dataTable id="table" value="#{theaterBean.theaters}" cellspacing="0" var="theater" rowClasses="oddRows,evenRows" headerClass="header" style="table" cellpadding="5">
+                    <h:column>
+                        <f:facet name="header">code</f:facet>
+                        <h:outputText value="#{theater.theater_code}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">name</f:facet>
+                        <h:outputText value="#{theater.theater_name}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">city</f:facet>
+                        <h:outputText value="#{theater.city_name}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">address</f:facet>
+                        <h:outputText value="#{theater.theater_address}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">website</f:facet>
+                        <h:outputText value="#{theater.website}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">phone</f:facet>
+                        <h:outputText value="#{theater.theater_phone}"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">edit theater</f:facet>
+                        <p:commandButton value="edit" process="@this" update=":managerform:theaterpage:addtheter" action="#{theaterBean.editTheater(theaterBean.theaters.row)}" oncomplete="PF('theaterDialog').show();"/>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">delete</f:facet>
+                        <p:commandButton value="delete" action="#{theaterBean.deleteTheater(theaterBean.theaters.row)}" process="@this" update=":managerform:message :managerform:theaterpage" >
+                            <p:confirm message="are you sure you want to delete the show?"/>
+                        </p:commandButton>
+                    </h:column>
+                </h:dataTable>
+            </div>
+ 
+        </h:form>
+    </h:body>
+</html>
+

@@ -14,10 +14,9 @@ import newuserbean.MainBean;
  * Represents an interface for a user to get non-privileged information about 
  * Events from the Events web site database. 
  * The information an object from this type can get, includes receiving 
- information about ShowBean categories, Shows,Theaters, Events etc. 
+ information about ShowBean categories, Shows,Theatres, Events etc. 
  Can also login as a user or subscribe new user to the database, as well as 
  reserving or canceling tickets for the logged in user.
- * @author Shani Shapiro
  */
 public interface EventsInfo {
     
@@ -366,6 +365,15 @@ public interface EventsInfo {
     public MainBean getUserInfo() throws SQLException, NoAccessException;
     
     /**
+     * Get a FilteredRowSet with the users id's 
+     * users in the DB users table.
+     * @return FilteredRowSet with users id's.
+     * @throws java.sql.SQLException
+     */
+    public List<String> getUsersId() throws SQLException;
+    
+    
+    /**
      * Updates/Changes the current user info with the given information.
      * @param user MainBean filled with the user info to be updated.
      * @return true if updated successfully, false otherwise.
@@ -384,6 +392,14 @@ public interface EventsInfo {
      * @throws SQLException 
      */
     public FilteredRowSet getEventTickets(int eventCode) throws SQLException;
+    
+    /**
+     * Get a FilteredRowSet with the shows id's 
+     * users in the DB shows table.
+     * @return FilteredRowSet with shows id's.
+     * @throws java.sql.SQLException
+     */
+    public List<Integer> getShowsId() throws SQLException;
     
     public void logOut();
 }

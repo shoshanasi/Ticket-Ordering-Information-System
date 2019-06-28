@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -15,14 +17,15 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.sql.rowset.FilteredRowSet;
 import javax.sql.rowset.RowSetProvider;
+import org.primefaces.PrimeFaces;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.ScheduleEvent;
+import recommender.GenaralSimilarity;
 
 /**
  * Represents the different search options and states in the application.
  * Searches Shows, Events out of Shows, Tickets for Events and reserves the Tickets.
- * @author Shani
  */
 @ManagedBean(name = "search")
 @ViewScoped
@@ -80,6 +83,11 @@ public class Search implements Serializable {
     //nedded for calander
     @ManagedProperty(value = "#{userBean}")
     private MainBean userBean;
+    
+    //needed for recommandsion acourding to search
+    @ManagedProperty(value = "#{userBean.similer}")
+    private GenaralSimilarity similer;
+
     
     /**
      * Constructor representing the initial general search.
@@ -178,6 +186,25 @@ public class Search implements Serializable {
     public ShowBean getSlectedRowShow(){
         return slectedRowShow;
     }
+    
+    /**
+     * Selects a show from the recommendation engine for search of it's events.
+     * called when a show is selected in the application.
+     * @param show the selected recommendation with the code.
+     */
+    public void selectedRecommand(String show){
+        try {
+            int place = show.indexOf("p");
+            String showCode = show.substring(0, place);
+            ShowBean showBean = new ShowBean();
+            showBean.setShowCode(Integer.parseInt(showCode));
+            dbInfo.getShow(showBean);
+            this.userBean.setActivTab("advanceSearch");
+            setSlectedRowShow(showBean);
+        } catch (SQLException ex) {
+            this.setMessage("we had problems connecting the database please try again later "+ex.getMessage());
+        }
+    }
 
     /**
      * Selects a show for search of it's events.
@@ -221,6 +248,8 @@ public class Search implements Serializable {
             return;
         }
         aSearchOrResult = "events";
+        similer.showsSimilarity(this.show.getShowCode());
+        PrimeFaces.current().ajax().update("mainform:similerPanal");
     }
     
     /**
@@ -359,7 +388,6 @@ public class Search implements Serializable {
         } catch (SQLException ex) {
             this.setMessage("we had problems connecting the database please try again later "+ex.getMessage());
         }
-        System.out.println("add show 2");
     }
     
     /**
@@ -389,7 +417,6 @@ public class Search implements Serializable {
      */
     public void addEvent(){
         this.setMessage("");
-        System.out.println("add event 1");
         try {
             if(event.eventOk()){
                 if(dbInfo instanceof EventsManagerInfoImpl){
@@ -428,7 +455,6 @@ public class Search implements Serializable {
      */
     public void deleteEvent(EventBean event){
         this.setMessage("");
-        System.out.println("dleate event 1"+this.getMessage());
         if(dbInfo instanceof EventsManagerInfoImpl){
             try {
                 if(((EventsManagerInfoImpl)dbInfo).deleteEvent(event.getCode())){
@@ -638,4 +664,7 @@ public class Search implements Serializable {
         this.numRowSeats = numRowSeats;
     }
     
+    public void setSimiler(GenaralSimilarity similer) {
+        this.similer = similer;
+    }
 }

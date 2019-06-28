@@ -14,7 +14,6 @@ import javax.faces.context.FacesContext;
 /**
  * A class representing the City editing page with with an optional added city 
  * and list of cities to show and edit.
- * @author Shani
  */
 @ManagedBean()
 @ViewScoped

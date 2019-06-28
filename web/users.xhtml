@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>users information</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form id="form">
+            
+            <p:growl id="msgs" showDetail="true"/>
+            <p:dataTable id="cars2" var="user" value="#{users.usersList}" editable="true" editMode="cell" widgetVar="cellCars" rowsPerPageTemplate="2,5,15" paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" paginator="true" rows="5">
+                <f:facet name="header">
+                    Cell Editing with Click and RightClick
+                </f:facet>
+
+                <p:ajax event="cellEdit" listener="#{users.onCellEdit}" update=":managerform:form:msgs" />
+
+                <p:column headerText="Id" filterBy="#{user.userID}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{user.userID}" /></f:facet>
+                        <f:facet name="input"><p:inputText id="modelInput" value="#{user.userID}" style="width:96%"/></f:facet>
+                    </p:cellEditor>
+                </p:column>
+
+                <p:column headerText="Name" filterBy="#{user.name}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{user.name}" /></f:facet>
+                        <f:facet name="input"><p:inputText value="#{user.name}" style="width:96%" /></f:facet>
+                    </p:cellEditor>
+                </p:column>
+
+                <p:column headerText="Email" filterBy="#{user.email}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{user.email}" /></f:facet>
+                        <f:facet name="input"><p:inputText value="#{user.email}" style="width:96%" /></f:facet>
+                    </p:cellEditor>
+                </p:column>
+
+                <p:column headerText="Phone" filterBy="#{user.phone}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{user.phone}" /></f:facet>
+                        <f:facet name="input"><p:inputText value="#{user.phone}" style="width:96%" /></f:facet>
+                    </p:cellEditor>
+                </p:column>
+                
+                <p:column headerText="address" filterBy="#{user.address}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{user.address}" /></f:facet>
+                        <f:facet name="input"><p:inputText value="#{user.address}" style="width:96%" /></f:facet>
+                    </p:cellEditor>
+                </p:column>
+                
+                <p:column headerText="City" filterBy="#{user.city}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{user.city}" /></f:facet>
+                        <f:facet name="input">
+                            <h:selectOneMenu value="#{user.city}" style="width:100%">
+                                <f:selectItems value="#{users.citis}" var="color" itemLabel="#{city}" itemValue="#{city}" />
+                            </h:selectOneMenu>
+                        </f:facet>
+                    </p:cellEditor>
+                </p:column>
+                
+                <p:column style="width:32px;text-align: center">
+                    <p:commandButton process="@this" update=":managerform:form:carDetail" oncomplete="PF('carDialog').show()" action="#{users.setTickits(user.userID)}" icon="pi pi-search" title="View">
+                       
+                   </p:commandButton>
+               </p:column>
+            </p:dataTable>
+            
+            
+            <p:dialog header="Users Info" widgetVar="carDialog" modal="true" showEffect="fade" hideEffect="fade" resizable="false">
+                <p:outputPanel id="carDetail" style="text-align:center;">
+                    <h:dataTable id="tableinfo" value="#{users.tickits}" cellspacing="0" var="tickit" rowClasses="oddRows,evenRows" headerClass="header" style="table" cellpadding="5">
+                        <h:column>
+                            <f:facet name="header">number</f:facet>
+                            #{tickit.ticket_no};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">name</f:facet>
+                            #{tickit.show_name};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">theater</f:facet>
+                            #{tickit.theater_name};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">date</f:facet>
+                            #{tickit.event_date};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">time</f:facet>
+                            #{tickit.event_time};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">row</f:facet>
+                            #{tickit.row};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">seat</f:facet>
+                            #{tickit.seat};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">price</f:facet>
+                            #{tickit.price};
+                        </h:column>
+                        <h:column>
+                            <f:facet name="header">cancel</f:facet>
+                            <p:commandButton process="@this" value="cancel tickt" actionListener="#{users.cancelTicket(users.tickits.row)}" update=":managerform:form:carDetail" >
+                                <p:confirm  message="are you sure you want to cancel the ticket?"/>
+                            </p:commandButton>
+                        </h:column>
+                    </h:dataTable>
+                </p:outputPanel>
+            </p:dialog>
+            
+            <p:contextMenu for="cars2" widgetVar="cMenu">   
+                <p:menuitem value="Edit Cell" icon="pi pi-search" onclick="PF('cellCars').showCellEditor();return false;"/>  
+                <p:menuitem value="Hide Menu" icon="pi pi-times" onclick="PF('cMenu').hide()"/>  
+            </p:contextMenu> 
+        </h:form>
+    </h:body>
+</html>

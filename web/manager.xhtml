@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Manager</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form id="managerform">
+            
+            <p:growl severity="info, warn" id="message" showDetail="true" autoUpdate="true" /> 
+            
+            <style type="text/css">
+                .ui-sticky {
+                    top: 0px !important;
+                }
+                @media (max-width: 960px) {
+                    .ui-sticky {
+                        top: 0px !important;
+                    }
+                }
+            </style>
+            
+            <p:toolbar id="tb">
+                <f:facet name="left">
+                    <p:commandButton value="Users" id="users" actionListener="#{userBean.changeActiveTab}" update="activ"/>
+                    <p:commandButton value="Theater" id="theater" actionListener="#{userBean.changeActiveTab}" update="activ"/>
+                    <p:commandButton value="Cities" id="cities" actionListener="#{userBean.changeActiveTab}" update="activ"/>
+                    <p:commandButton value="Categories" id="categories" actionListener="#{userBean.changeActiveTab}" update="activ"/>
+                    <p:commandButton value="Shows" id="shows1" actionListener="#{userBean.changeActiveTab}" update="activ"/>
+                </f:facet>
+                <f:facet name="right">
+                    <p:outputLabel for="numTests" value="test: num of threads"/>
+                    <p:inputText id="numTests" required="true" requiredMessage="number of tests is required" value="#{runTesters.numOfThreads}"/> 
+                    <p:commandButton value="submit" id="test" action="#{runTesters.runTests}" />
+                    <p:button value="back home" outcome="index"/>
+                </f:facet>
+            </p:toolbar>
+
+            <div style="height:5px"></div>
+
+            <p:sticky target="tb" />
+            
+            <h:panelGrid id="activ">
+                <c:choose>
+                    <c:when test="#{'categories' eq userBean.activTab}">
+                        <ui:include src="\category.xhtml"/>
+                    </c:when>
+                    <c:when test="#{'theater' eq userBean.activTab}">
+                        <ui:include src="\theater.xhtml"/>
+                    </c:when>
+                    <c:when test="#{'cities' eq userBean.activTab}">
+                        <ui:include src="\city.xhtml"/>
+                    </c:when>
+                    <c:when test="#{'shows1' eq userBean.activTab}">
+                        <ui:include src="\managerSearch.xhtml"/>
+                    </c:when>
+                    <c:otherwise>
+                        <ui:include src="\users.xhtml"/>
+                    </c:otherwise>
+                </c:choose>
+            </h:panelGrid>
+            
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="yes" type="button" styleClass="ui-confirmdialog-yes" />
+                <p:commandButton value="no" type="button" styleClass="ui-confirmdialog-no"/>
+            </p:confirmDialog>
+            <p:commandButton value="user similrty" actionListener="#{genaralSimilarity.usersSimilarity()}"/>
+        </h:form>
+    </h:body>
+</html>

@@ -15,7 +15,6 @@ import javax.faces.context.FacesContext;
 /**
  * A class representing the Category editing page with with an optional added 
  * category and list of categories to show.
- * @author Shani
  */
 @ManagedBean()
 @ViewScoped

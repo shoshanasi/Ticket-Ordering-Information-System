@@ -16,7 +16,6 @@ import org.primefaces.context.RequestContext;
 /**
  * A bean that contains the least of theatres and a current 'highlighted' 
  * working theatre we are editing or adding.
- * @author Shani
  */
 @ManagedBean()
 @ViewScoped

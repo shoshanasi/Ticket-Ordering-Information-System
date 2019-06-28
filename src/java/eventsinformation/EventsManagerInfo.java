@@ -4,6 +4,7 @@ package eventsinformation;
 
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.List;
 import javax.naming.NamingException;
 import javax.sql.rowset.FilteredRowSet;
 import newuserbean.EventBean;
@@ -15,11 +16,10 @@ import newuserbean.MainBean;
 /**
  * Represents an interface for communication with the database for for a 
  * privileged user with manager permission.
- * Can Add, Edit, Delete and retrieve ShowBean categories, Shows, Theaters, Events,
+ * Can Add, Edit, Delete and retrieve ShowBean categories, Shows, Theatres, Events,
  Tickets and all User information.
  This interface extends EventsInfo, so it already has all capabilities of a
  normal user.
- * @author Shani Shapiro
  */
 public interface EventsManagerInfo extends EventsInfo {
     
@@ -147,6 +147,9 @@ public interface EventsManagerInfo extends EventsInfo {
      * @throws java.sql.SQLException
      */
     public FilteredRowSet getUsers() throws SQLException;
+    
+    
+    
     
     /**
      * Gets all the tickets info for a given event. Including the seat info.

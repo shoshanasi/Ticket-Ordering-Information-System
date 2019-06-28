@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+    <h:head>
+        <title>show form</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form>
+            
+            <h:panelGrid id="show">
+                <h:outputText value="#{search.message}" style="color: red"/>
+                
+                <h:panelGrid columns="3">
+                    Name:
+                    <h:inputText id="nameText" maxlength="30" required="true" requiredMessage="a show name is required" value="#{showBean.name}" validatorMessage="Name must be fewer than 30 characters"/>
+                    <h:message id="name1Message" for="nameText" styleClass="error"/>
+
+                    Category:
+                    <h:selectOneMenu value="#{showBean.category}" id="categoryText" required="true" requiredMessage="must choose a category" >
+                        <f:selectItem itemLabel="choose a category"/>
+                        <f:selectItems value="#{search.completeCategory()}"/>
+                    </h:selectOneMenu>
+                    <h:message id="category1Message" for="categoryText" styleClass="error"/>
+
+                    Description:
+                    <h:inputText id="descriptionText" maxlength="1023" required="true" requiredMessage="a Description is requierd" value="#{showBean.description}" validatorMessage="Description must be fewer than 1023 characters"/>
+                    <h:message id="description1Message" for="descriptionText" styleClass="error"/>
+
+                    Year produced:
+                    <p:inputText id="yearText" required="true"  value="#{showBean.year}" validatorMessage="Please enter a valid year (4 numbers)" requiredMessage="Year produced is required">
+                        <f:validateRegex pattern="([0-9][0-9][0-9][0-9])"/>
+                    </p:inputText>
+                    <h:message id="year1Message" for="yearText" styleClass="error"/>
+
+                    show length:
+                    <p:inputText id="lengthText" required="true"  value="#{showBean.length}" validatorMessage="Please enter a valid time (hh:mm format)" requiredMessage="show length is required">
+                        <f:validateRegex pattern="([0-9][0-9][:][0-9][0-9])"/>
+                    </p:inputText>
+                    <h:message id="length1Message" for="lengthText" styleClass="error"/>
+
+                    <p:commandButton ajax="true" value="submit" actionListener="#{search.addShow()}" process="show" update="show :mainform:search:result1" rendered="#{'shows1' ne userBean.activTab}">
+                        <p:confirm message="are you sure you want to add the show?"/>
+                    </p:commandButton>
+                    <p:commandButton ajax="true" value="submit" actionListener="#{search.addShow()}" process="show" update="show :managerform:search:result1" rendered="#{'shows1' eq userBean.activTab}">
+                        <p:confirm message="are you sure you want to add the show?"/>
+                    </p:commandButton>
+                </h:panelGrid>
+            </h:panelGrid>
+
+        </h:form>
+    </h:body>
+</html>

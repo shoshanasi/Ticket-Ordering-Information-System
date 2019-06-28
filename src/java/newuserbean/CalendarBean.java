@@ -19,7 +19,6 @@ import org.primefaces.model.LazyScheduleModel;
 
 /**
  * Represents a Calendar with events on the matching dates.
- * @author Shani
  */
 @ManagedBean()
 @ViewScoped
@@ -68,6 +67,7 @@ public class CalendarBean {
         date.setTime(base);
         date.set(Calendar.DATE, base.getDate());
         date.set(Calendar.HOUR, time.getHours());
+        date.set(Calendar.MINUTE, time.getMinutes());
         return date.getTime();
     }    
    

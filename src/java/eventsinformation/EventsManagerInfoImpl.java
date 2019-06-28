@@ -5,6 +5,8 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.naming.NamingException;
 import javax.sql.rowset.FilteredRowSet;
 import newuserbean.*;
@@ -16,7 +18,6 @@ import newuserbean.*;
  * In order to instantiate this object, you need to provide besides for database
  * login information also a user and password for the web site that has manager
  * permissions.
- * @author Shani Shapiro
  */
 public class EventsManagerInfoImpl extends EventsInfoImpl implements EventsManagerInfo {
     
@@ -502,6 +503,36 @@ public class EventsManagerInfoImpl extends EventsInfoImpl implements EventsManag
         return getTableColumns("user_id, user_name, email,"
                 + " user_address, user_phone,  city_name ", "users");
     }
+    
+    
+    
+    private List<String> getTableList(String tableName, String colomnName, String initial) throws SQLException {
+        ArrayList list;
+        ResultSet rs = null;
+        PreparedStatement pstat = null;
+        try {
+            String query = "SELECT " + colomnName + " FROM " +
+                 tableName + " WHERE " + colomnName + " LIKE ?";
+            
+            synchronized(this) {
+                pstat = createPreparedStatment(query);     
+                pstat.setString(1, initial + "%");
+                rs = pstat.executeQuery();
+                list = new ArrayList();
+                while(rs.next()) {
+                    list.add(rs.getString(colomnName));
+                }
+            }
+        }
+        finally {
+            if(rs != null)
+                rs.close();
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+        return list;
+    }
 
     @Override
     public boolean editShow(ShowBean show) throws SQLException {
@@ -558,7 +589,7 @@ public class EventsManagerInfoImpl extends EventsInfoImpl implements EventsManag
         String query = "SELECT * FROM events "
                 + " NATURAL JOIN shows "
                 + " NATURAL JOIN theaters "
-                + " NATURAL JOIN (SELECT event_code, COUNT(*) AS available "
+                + " NATURAL JOIN (SELECT event_code, SUM(user_id IS NULL) AS available "
                 + " FROM tickets GROUP BY event_code) "
                 + " AS available_tickets "
                 + " WHERE ";
@@ -670,5 +701,9 @@ public class EventsManagerInfoImpl extends EventsInfoImpl implements EventsManag
         return filteredRS;              
 
     }
+    
+    
+    
+    
     
 }

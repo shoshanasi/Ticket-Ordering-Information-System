@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>event form</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </h:head>
+    <h:body>
+        <h:form>
+            
+            <h:panelGrid id="event">
+                <h:outputText value="#{search.message}" style="color: red"/>
+                <h:panelGrid columns="3" >
+                    time:
+                    <p:calendar id="timeText" value="#{eventBean.time}" pattern="HH:mm" timeOnly="true" required="true" requiredMessage="event time is required" />
+                    <h:message id="timeMessage" for="timeText" styleClass="error"/>
+
+                    Date:
+                    <p:calendar id="dateInputText" value="#{eventBean.date}" mindate="today" required="true" requiredMessage="must choose a date" />
+                    <h:message id="dateMessage" for="dateInputText" styleClass="error"/>
+
+                    City:
+                    <h:selectOneMenu value="#{eventBean.city}" id="cityInputText" required="true" requiredMessage="must choose a city" >
+                        <f:ajax listener="#{eventBean.cityChoosen}" execute="cityInputText" render="cityInputText TheaterInputText"/>
+                        <f:selectItem itemLabel=""/>
+                        <f:selectItems value="#{search.completeCity()}" />
+                    </h:selectOneMenu>
+                    <h:message id="cityMessage" for="cityInputText" styleClass="error"/>
+
+                    Theater:
+                    <h:selectOneMenu value="#{eventBean.theaterCode}" id="TheaterInputText" required="true" requiredMessage="must choose a Theater" >
+                        <f:selectItem itemLabel=""/>
+                        <f:selectItems value="#{eventBean.theaterList}" var="theater" itemValue="#{theater.code}" itemLabel="#{theater.name}" />
+                    </h:selectOneMenu>
+                    <h:message id="TheaterMessage" for="TheaterInputText" styleClass="error"/>
+                    
+                    Unassigned Seats:
+                    <p:inputText onkeypress="if(event.which &lt; 48 || event.which &gt; 57) return false;" id="rowsText" value="#{eventBean.unassignedSeats}"/>
+                    <h:message id="rowsMessage" for="rowsText" styleClass="error"/>
+                    
+                    Price for a Seat:
+                    <p:inputNumber  id="priceText" value="#{eventBean.price}"/>
+                    <h:message id="priceMessage" for="priceText" styleClass="error"/>
+
+                    <p:commandButton ajax="true" value="submit" actionListener="#{search.addEvent()}" process="event" update="event :mainform:search:eventTable" rendered="#{'shows1' ne userBean.activTab}">
+                        <p:confirm message="are you sure you want to add the event?"/>
+                    </p:commandButton>
+                    <p:commandButton ajax="true" value="submit" actionListener="#{search.addEvent()}" process="event" update="event :managerform:search:eventTable" rendered="#{'shows1' eq userBean.activTab}">
+                        <p:confirm message="are you sure you want to add the event?"/>
+                    </p:commandButton>
+                </h:panelGrid>
+            </h:panelGrid>
+            
+        </h:form>
+    </h:body>
+</html>

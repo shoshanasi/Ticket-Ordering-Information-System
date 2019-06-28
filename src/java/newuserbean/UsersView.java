@@ -16,7 +16,6 @@ import org.primefaces.event.CellEditEvent;
 
 /**
  * Bean representing an editable list of users.
- * @author Shani
  */
 @ManagedBean(name = "users")
 @ViewScoped

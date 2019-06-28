@@ -16,7 +16,6 @@ import javax.sql.rowset.FilteredRowSet;
 
 /**
  * A Bean class representing an event's information.
- * @author Shani
  */
 @ManagedBean()
 @ViewScoped

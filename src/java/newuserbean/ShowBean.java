@@ -24,7 +24,6 @@ import javax.sql.rowset.FilteredRowSet;
 
 /**
  * A Bean class representing a Show information.
- * @author Shani
  */
 @ManagedBean(name = "showBean")
 @ViewScoped
@@ -38,6 +37,8 @@ public class ShowBean implements Serializable{
     private String length;
     private String description;
     private int showCode;
+    
+    private Integer rating;
     
     private String review;
     
@@ -104,7 +105,7 @@ public class ShowBean implements Serializable{
                 InputStream bis = new ByteArrayInputStream(output.toByteArray());
                 BufferedImage bImageFromConvert = ImageIO.read(bis);
                 File path;
-                path = new File(IMAGE_PATH+"\\images\\"+showCode+fileaddres);
+                path = new File(IMAGE_PATH+"\\images\\"+showCode+"photo"+fileaddres);
                 ImageIO.write(bImageFromConvert, "JPG", path);
                 dbInfo.insertPicture(showCode, showCode+fileaddres);
                 imagesList.add(showCode+fileaddres);
@@ -145,13 +146,20 @@ public class ShowBean implements Serializable{
     }
     
     /**
-     * Adds a review to the show.
+     * Adds a review and the rating to the show.
      */
     public void addReview(){
         try {
-            dbInfo.insertReview(showCode, review);
-            this.setReview("");
-            this.setReviewList();
+            if(!this.review.equals("")){
+                dbInfo.insertReview(showCode, review);
+                this.setReview("");
+                this.setReviewList();
+            }
+            if(this.rating != 0){
+                dbInfo.deleteOldGrade(showCode);
+                dbInfo.insertGrade(showCode, rating);
+                this.setRating(0);
+            }
         } catch (SQLException ex) {
             FacesMessage msg = new FacesMessage("we had problems connecting the database please try again later"+ex.getMessage());
             FacesContext.getCurrentInstance().addMessage(null, msg);
@@ -295,4 +303,11 @@ public class ShowBean implements Serializable{
     }
 
     
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
+    }
 }

@@ -7,7 +7,6 @@ import javax.faces.bean.ViewScoped;
 
 /**
 * A bean that represents a ticket of an event.
-* @author Shani
 */
 @ManagedBean()
 @ViewScoped

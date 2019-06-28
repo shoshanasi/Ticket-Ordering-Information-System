@@ -17,7 +17,6 @@ import javax.sql.rowset.*;
  * various methods from the Events web site database. It also remembers the 
  * user logged in if provided this information. 
  * After a user was registered to this class it can't be changed.
- * @author Shani Shapiro
  */
 public class EventsInfoImpl implements EventsInfo {
           
@@ -944,7 +943,8 @@ public class EventsInfoImpl implements EventsInfo {
             " NATURAL JOIN events AS E " +
             " NATURAL JOIN shows AS S " +
             " NATURAL JOIN theaters AS H " +
-            " NATURAL JOIN seats  AS A " +
+            " LEFT JOIN seats  AS A " +
+                " ON T.seat_id = A.seat_id " +
             " ORDER BY E.event_date, E.event_time ";
         PreparedStatement pstat = null;
         try {
@@ -1199,4 +1199,163 @@ public class EventsInfoImpl implements EventsInfo {
         this.isManager = false;
         close();
     }
+    
+    @Override
+    public List<Integer> getShowsId() throws SQLException {
+        ArrayList list;
+        ResultSet rs = null;
+        PreparedStatement pstat = null;
+        try {
+            String query = "SELECT " + "show_code " + " FROM " +
+                 "shows" + " WHERE " + "show_code " + " LIKE ?";
+            
+            synchronized(this) {
+                pstat = createPreparedStatment(query);     
+                pstat.setString(1, "" + "%");
+                rs = pstat.executeQuery();
+                list = new ArrayList();
+                while(rs.next()) {
+                    list.add(rs.getInt("show_code"));
+                }
+            }
+        }
+        finally {
+            if(rs != null)
+                rs.close();
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+        return list;
+    }
+    
+    public FilteredRowSet getShowRating(int showId) throws SQLException{
+        String query = "SELECT * FROM grade WHERE Show_code = ? "
+                + " ORDER BY user_id ";
+        PreparedStatement pstat = null;
+        try {
+            pstat = createPreparedStatment(query);
+            pstat.setInt(1, showId);
+            ResultSet rs = pstat.executeQuery();
+
+            FilteredRowSet filteredRS = factory.createFilteredRowSet();
+            filteredRS.populate(rs);
+
+            return filteredRS;
+        }
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    public synchronized boolean insertGrade(int showCode, int grade) throws SQLException {
+        String query = "INSERT INTO grade (show_code, grade, user_id) "
+                + "VALUES (?, ?, ?)";
+        PreparedStatement pstat = null;
+        try {
+            pstat = createPreparedStatment(query);
+            pstat.setInt(1, showCode);
+            pstat.setDouble(2, grade-3);
+            pstat.setString(3, clientUserID);
+            
+            return pstat.executeUpdate() != 0;
+        }
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    public synchronized boolean deleteOldGrade(int showCode) throws SQLException{
+        String query = "DELETE FROM " +  "grade" + " WHERE " + "show_code" + " = ? AND user_id = ? ";
+        PreparedStatement pstat = null;
+        try {
+            pstat = createPreparedStatment(query);        
+            pstat.setInt(1, showCode);
+            pstat.setString(2, clientUserID);
+            return pstat.executeUpdate() != 0;
+        }
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+        
+    }
+    
+    
+    public FilteredRowSet getUserRating(String userID) throws SQLException{
+        String query = "SELECT * FROM grade WHERE user_id = ? "
+                + " ORDER BY show_code ";
+        PreparedStatement pstat = null;
+        try {
+            pstat = createPreparedStatment(query);
+            pstat.setString(1, userID);
+            ResultSet rs = pstat.executeQuery();
+
+            FilteredRowSet filteredRS = factory.createFilteredRowSet();
+            filteredRS.populate(rs);
+
+            return filteredRS;
+        }
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    
+    
+    
+    public synchronized boolean insertReccomd(int showCode, String user_id, double grade) throws SQLException {
+        String query = "INSERT INTO userRecoomedsion (show_code, grade, user_id) "
+                + "VALUES (?, ?, ?)";
+        PreparedStatement pstat = null;
+        try {
+            pstat = createPreparedStatment(query);
+            pstat.setInt(1, showCode);
+            pstat.setDouble(2, grade);
+            pstat.setString(3, user_id);
+            
+            return pstat.executeUpdate() != 0;
+        }
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    
+    public FilteredRowSet getUserRecommandsion(String userID) throws SQLException{
+        String query = "SELECT * FROM userRecoomedsion WHERE user_id = ? "
+                + " ORDER BY grade ";
+        PreparedStatement pstat = null;
+        try {
+            pstat = createPreparedStatment(query);
+            pstat.setString(1, userID);
+            ResultSet rs = pstat.executeQuery();
+
+            FilteredRowSet filteredRS = factory.createFilteredRowSet();
+            filteredRS.populate(rs);
+
+            return filteredRS;
+        }
+        finally {
+            if(pstat != null)
+                pstat.close();
+            close();
+        }
+    }
+    
+    @Override
+    public List<String> getUsersId() throws SQLException {
+        return getTableList("users", "user_id", "");
+    }
+    
+    
 }
